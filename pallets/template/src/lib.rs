@@ -16,20 +16,19 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::sp_runtime::traits::Hash;
-	use frame_support::sp_runtime::traits::Zero;
-	use frame_support::traits::Randomness;
-	use frame_support::traits::{Currency, ExistenceRequirement};
-	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
-	use frame_system::pallet_prelude::*;
+    use frame_support::sp_runtime::traits::Hash;
+    use frame_support::sp_runtime::traits::Zero;
+    use frame_support::traits::Randomness;
+    use frame_support::traits::{Currency, ExistenceRequirement};
+    use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
+    use frame_system::pallet_prelude::*;
 	use sp_core::H256;
-	// use sp_core::BlockNumber;
 	use sp_io::hashing::blake2_128;
 	use codec::{Encode, Decode};
 
-	// Struct for holding Kitty information.
-	#[derive(Clone, Encode, Decode, Default, PartialEq)]
-	pub struct Kitty(pub [u8;16]);
+    // Struct for holding Kitty information.
+    #[derive(Clone, Encode, Decode, Default, PartialEq)]
+    pub struct Kitty(pub [u8;16]);
 	type KittyIndex = u32;
 
 	#[pallet::config]
@@ -37,19 +36,21 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		/// The type of Random we want to specify for runtime.
+		type Randomness: Randomness<H256, Self::BlockNumber>;
 	}
 
-	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
-	pub struct Pallet<T>(_);
+    #[pallet::pallet]
+    #[pallet::generate_store(pub(super) trait Store)]
+    pub struct Pallet<T>(_);
 
-	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {
+    #[pallet::event]
+    #[pallet::metadata(T::AccountId = "AccountId")]
+    #[pallet::generate_deposit(pub(super) fn deposit_event)]
+    pub enum Event<T: Config> {
 		KittyCreate(T::AccountId, KittyIndex),
-		KittyTransfer(T::AccountId, T::AccountId, KittyIndex),
-	}
+        KittyTransfer(T::AccountId, T::AccountId, KittyIndex),
+    }
 
 	// Stores the total amount of Kitties in existence.
 	#[pallet::storage]
@@ -98,32 +99,32 @@ pub mod pallet {
 		NotOwner,
 	}
 
-	// Storage items.
+    // Storage items.
 
-	// Keeps track of the Nonce used in the randomness generator.
-	#[pallet::storage]
-	#[pallet::getter(fn get_nonce)]
-	pub(super) type Nonce<T: Config> = StorageValue<_, u64, ValueQuery>;
+    // Keeps track of the Nonce used in the randomness generator.
+    #[pallet::storage]
+    #[pallet::getter(fn get_nonce)]
+    pub(super) type Nonce<T: Config> = StorageValue<_, u64, ValueQuery>;
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
-	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
-	// These functions materialize as "extrinsics", which are often compared to transactions.
-	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
+    // Dispatchable functions allows users to interact with the pallet and invoke state changes.
+    // These functions materialize as "extrinsics", which are often compared to transactions.
+    // Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 
-	#[pallet::call]
-	impl<T: Config> Pallet<T> {
-		/// Create a new unique kitty.
-		///
-		/// Provides the new Kitty details to the 'mint()'
-		/// helper function (sender, kitty hash, Kitty struct).
-		///
-		/// Calls mint() and increment_nonce().
-		///
-		/// Weight: `O(1)`
-		#[pallet::weight(100)]
-		pub fn create(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+    #[pallet::call]
+    impl<T: Config> Pallet<T> {
+        /// Create a new unique kitty.
+        ///
+        /// Provides the new Kitty details to the 'mint()'
+        /// helper function (sender, kitty hash, Kitty struct).
+        ///
+        /// Calls mint() and increment_nonce().
+        ///
+        /// Weight: `O(1)`
+        #[pallet::weight(100)]
+        pub fn create(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let kitty_id = match Self::kitties_count() {
 				Some(id) => {
@@ -143,8 +144,8 @@ pub mod pallet {
 			KittiesCount::<T>::put(kitty_id + 1);
 
 			Self::deposit_event(Event::KittyCreate(who, kitty_id));
-			Ok(().into())
-		}
+            Ok(().into())
+        }
 
 		#[pallet::weight(0)]
 		pub fn transfer(origin: OriginFor<T>, new_owner: T::AccountId, kitty_id: KittyIndex) -> DispatchResultWithPostInfo {
@@ -155,11 +156,11 @@ pub mod pallet {
 			Self::deposit_event(Event::KittyTransfer(who, new_owner, kitty_id));
 			Ok(().into())
 		}
-	}
+    }
 
-	//** These are all our **//
-	//** helper functions. **//
-	impl<T: Config> Pallet<T> {
+    //** These are all our **//
+    //** helper functions. **//
+    impl<T: Config> Pallet<T> {
 
 		fn random_value(sender: &T::AccountId) -> [u8; 16] {
 			let payload = (
@@ -169,5 +170,5 @@ pub mod pallet {
 			);
 			payload.using_encoded(blake2_128)
 		}
-	}
+    }
 }

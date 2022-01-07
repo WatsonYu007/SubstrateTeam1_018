@@ -17,6 +17,7 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
 	}
@@ -57,9 +58,12 @@ impl system::Config for Test {
 
 impl pallet_template::Config for Test {
 	type Event = Event;
+	type Randomness = RandomnessCollectiveFlip;
 	// type MinLength = MinPoeLength;
 	// type MaxLength = MaxPoeLength;
 }
+
+impl pallet_randomness_collective_flip::Config for Test {}
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
