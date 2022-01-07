@@ -305,8 +305,8 @@ impl pallet_sudo::Config for Runtime {
 /// Configure the pallet-template in pallets/template.
 impl pallet_template::Config for Runtime {
 	type Event = Event;
-	type MinLength = MinPoeLength;
-	type MaxLength = MaxPoeLength;
+	// type MinLength = MinPoeLength;
+	// type MaxLength = MaxPoeLength;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.

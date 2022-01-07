@@ -57,8 +57,8 @@ impl system::Config for Test {
 
 impl pallet_template::Config for Test {
 	type Event = Event;
-	type MinLength = MinPoeLength;
-	type MaxLength = MaxPoeLength;
+	// type MinLength = MinPoeLength;
+	// type MaxLength = MaxPoeLength;
 }
 
 // Build genesis storage according to the mock runtime.
