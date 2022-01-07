@@ -164,7 +164,7 @@ pub mod pallet {
 
 		fn random_value(sender: &T::AccountId) -> [u8; 16] {
 			let payload = (
-				// T::Randomness::random_seed(),
+				T::Randomness::random_seed(),
 				&sender,
 				<frame_system::Pallet<T>>::extrinsic_index(),
 			);
