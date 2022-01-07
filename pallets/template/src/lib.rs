@@ -54,6 +54,7 @@ pub mod pallet {
     pub enum Event<T: Config> {
 		KittyCreate(T::AccountId, KittyIndex),
         KittyTransfer(T::AccountId, T::AccountId, KittyIndex),
+		Bought(T::AccountId, T::AccountId, T::Hash, BalanceOf<T>),
     }
 
 	// Stores the total amount of Kitties in existence.
@@ -70,6 +71,11 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn owner_of)]
 	pub(super) type Owner<T: Config> = StorageMap<_, Blake2_128Concat, KittyIndex, Option<T::AccountId>, ValueQuery>;
+
+	// Keeps track of what accounts own what Kitty.
+	#[pallet::storage]
+	#[pallet::getter(fn price_of)]
+	pub(super) type Prices<T: Config> = StorageMap<_, Blake2_128Concat, KittyIndex, Option<BalanceOf<T>>, ValueQuery>;
 
 	// Our pallet's genesis configuration.
 	#[pallet::genesis_config]
@@ -103,6 +109,11 @@ pub mod pallet {
 		NotOwner,
 		SameParentIndex,
 		InvalidKittyIndex,
+		KittyNotExist,
+		BuyerIsKittyOwner,
+		KittyNoPrice,
+		KittyPriceTooLow,
+		NotEnoughBalance,
 	}
 
     // Storage items.
@@ -193,6 +204,28 @@ pub mod pallet {
 			Kitties::<T>::insert(kitty_id, Some(Kitty(new_dna)));
 			Owner::<T>::insert(kitty_id, Some(who.clone()));
 			KittiesCount::<T>::put(kitty_id + 1);
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(1000)]
+		pub fn buy(origin: OriginFor<T>, kitty_id: KittyIndex, price: BalanceOf<T>) -> DispatchResultWithPostInfo {
+			let buyer = ensure_signed(origin)?;
+			let kitty = Self::kitties(kitty_id).ok_or(<Error<T>>::KittyNotExist)?;
+			let kitty_price = Self::price_of(kitty_id).ok_or(<Error<T>>::KittyNoPrice)?;
+			let owner = Self::owner_of(kitty_id).ok_or(<Error<T>>::NotOwner)?;
+
+			ensure!(owner != buyer, Error::<T>::BuyerIsKittyOwner);
+			ensure!(kitty_price <= price, Error::<T>::KittyPriceTooLow);
+
+			ensure!(T::Currency::free_balance(&buyer) >= price, <Error<T>>::NotEnoughBalance);
+
+			let seller = owner.clone();
+			T::Currency::transfer(&buyer, &seller, price, ExistenceRequirement::KeepAlive)?;
+
+			Owner::<T>::insert(kitty_id, Some(owner.clone()));
+
+			// Self::deposit_event(Event::Bought(buyer, seller, kitty_id, price));
 
 			Ok(().into())
 		}
