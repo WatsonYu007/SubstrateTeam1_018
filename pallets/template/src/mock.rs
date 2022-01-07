@@ -19,7 +19,8 @@ frame_support::construct_runtime!(
 	{
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Event<T>, Config<T>},
+		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
@@ -48,7 +49,7 @@ impl system::Config for Test {
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<u128>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -56,8 +57,25 @@ impl system::Config for Test {
 	type OnSetCode = ();
 }
 
+parameter_types! {
+	pub const ExistentialDeposit: u128 = 1;
+}
+
+impl pallet_balances::Config for Test {
+	type AccountStore = System;
+	type Balance = u128;
+	type DustRemoval = ();
+	type Event = Event;
+	type ExistentialDeposit = ExistentialDeposit;
+	type MaxLocks = ();
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type WeightInfo = ();
+}
+
 impl pallet_template::Config for Test {
 	type Event = Event;
+	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	// type MinLength = MinPoeLength;
 	// type MaxLength = MaxPoeLength;

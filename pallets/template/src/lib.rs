@@ -30,6 +30,7 @@ pub mod pallet {
     #[derive(Clone, Encode, Decode, Default, PartialEq)]
     pub struct Kitty(pub [u8;16]);
 	type KittyIndex = u32;
+	type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -38,6 +39,9 @@ pub mod pallet {
 
 		/// The type of Random we want to specify for runtime.
 		type Randomness: Randomness<H256, Self::BlockNumber>;
+
+		/// The Currency handler for the Kitties pallet.
+		type Currency: Currency<Self::AccountId>;
 	}
 
     #[pallet::pallet]
