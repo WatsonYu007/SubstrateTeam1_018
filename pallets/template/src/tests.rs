@@ -1,11 +1,35 @@
-use frame_support::{assert_noop, assert_ok};
+use crate::mock::*;
+use frame_support::assert_ok;
+use sp_runtime::{
+	traits::{ Header as _ },
+};
 
-use crate::{Error, mock::*};
+use frame_support::traits::{ OnInitialize};
+fn setup_blocks(blocks: u64) {
+	let mut parent_hash = System::parent_hash();
+	for i in 1..(blocks + 1) {
+		System::initialize(&i, &parent_hash, &Default::default(), frame_system::InitKind::Full);
+		RandomnessCollectiveFlip::on_initialize(i);
+
+		let header = System::finalize();
+		parent_hash = header.hash();
+		System::set_block_number(*header.number());
+	}
+}
 
 #[test]
-fn create_kitty_works() {
+fn create_kitty_should_work() {
 	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1, 0, 1, 0, 1, 0, 1];
-		assert_ok!(TemplateModule::create(Origin::signed(11)));
-	})
+
+		setup_blocks(80);
+		assert_ok!(Balances::set_balance(Origin::root(), 1, 10000000, 0));
+		assert_eq!(Balances::free_balance(&1), 10000000);
+		// create a kitty with account #10.
+		let kitty00 = SubstrateKitties::create(Origin::signed(10));
+		assert_ok!(kitty00);
+		assert_ok!(SubstrateKitties::create(Origin::signed(10)));
+		assert_ok!(SubstrateKitties::create(Origin::signed(10)));
+		// check that there is now 3 kitty in storage
+		assert_eq!(SubstrateKitties::kitties_count(), Some(3));
+	});
 }

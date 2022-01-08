@@ -1,4 +1,4 @@
-use crate as pallet_template;
+use crate as pallet_kitties;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -20,15 +20,13 @@ frame_support::construct_runtime!(
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Event<T>, Config<T>},
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>, Config<T>},
+		SubstrateKitties: pallet_kitties::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
 	pub const SS58Prefix: u8 = 42;
-	pub const MinPoeLength: u32 = 8;
-	pub const MaxPoeLength: u32 = 32;
 }
 
 impl system::Config for Test {
@@ -57,10 +55,6 @@ impl system::Config for Test {
 	type OnSetCode = ();
 }
 
-parameter_types! {
-	pub const ExistentialDeposit: u128 = 1;
-}
-
 impl pallet_balances::Config for Test {
 	type AccountStore = System;
 	type Balance = u128;
@@ -73,16 +67,20 @@ impl pallet_balances::Config for Test {
 	type WeightInfo = ();
 }
 
-impl pallet_template::Config for Test {
+parameter_types! {
+	pub const ExistentialDeposit: u128 = 500;
+	pub const MaxLocks: u32 = 50;
+	pub const MaxKittyOwned: u32 = 9999;
+}
+
+impl pallet_randomness_collective_flip::Config for Test {}
+
+impl pallet_kitties::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	type KittyIndex = u32;
-	// type MinLength = MinPoeLength;
-	// type MaxLength = MaxPoeLength;
 }
-
-impl pallet_randomness_collective_flip::Config for Test {}
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
