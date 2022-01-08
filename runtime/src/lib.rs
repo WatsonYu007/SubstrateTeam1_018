@@ -307,6 +307,7 @@ impl pallet_template::Config for Runtime {
 	type Event = Event;
 	type Randomness = RandomnessCollectiveFlip;
 	type Currency = Balances;
+	type KittyIndex = u32;
 	// type MinLength = MinPoeLength;
 	// type MaxLength = MaxPoeLength;
 }
