@@ -77,6 +77,7 @@ impl pallet_template::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
+	type KittyIndex = u32;
 	// type MinLength = MinPoeLength;
 	// type MaxLength = MaxPoeLength;
 }
