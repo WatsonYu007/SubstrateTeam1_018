@@ -154,12 +154,7 @@ pub mod pallet {
 			// 	}
 			// };
 
-			let new_cnt = match Self::kitties_count() {
-				Some(cnt) => {
-					cnt.checked_add(&One::one()).ok_or(<Error<T>>::KittiesCountOverflow)?
-				},
-				None => One::one(),
-			};
+			let new_cnt = Self::get_new_kitties_count();
 
 			let dna = Self::random_value(&who);
 
@@ -201,12 +196,7 @@ pub mod pallet {
 				}
 			}; */
 
-			let new_cnt = match Self::kitties_count() {
-				Some(cnt) => {
-					cnt.checked_add(&One::one()).ok_or(<Error<T>>::KittiesCountOverflow)?
-				},
-				None => One::one(),
-			};
+			let new_cnt = Self::get_new_kitties_count();
 
 			let dna_1 = kitty1.unwrap().0;
 			let dna_2 = kitty2.unwrap().0;
@@ -258,6 +248,16 @@ pub mod pallet {
 				<frame_system::Pallet<T>>::extrinsic_index(),
 			);
 			payload.using_encoded(blake2_128)
+		}
+
+		fn get_new_kitties_count() -> T::KittyIndex {
+			let new_cnt = match Self::kitties_count() {
+				Some(cnt) => {
+					cnt.checked_add(&One::one()).ok_or(<Error<T>>::KittiesCountOverflow).unwrap()
+				},
+				None => One::one(),
+			};
+			new_cnt
 		}
     }
 }
