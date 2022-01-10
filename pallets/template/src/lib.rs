@@ -171,9 +171,19 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn transfer(origin: OriginFor<T>, new_owner: T::AccountId, kitty_id: T::KittyIndex) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(Some(who.clone()) == Owner::<T>::get(kitty_id),
-				Error::<T>::NotOwner);
+			let owner = Self::owner_of(kitty_id).ok_or(<Error<T>>::NotOwner)?;
+
+			// 确保kitty_id的所有者
+			ensure!(owner == who, Error::<T>::NotOwner);
+			// 确保kitty_id的所有者
+			// ensure!(Some(who.clone()) == Owner::<T>::get(kitty_id), Error::<T>::NotOwner);
+
+			// 确保kitty_id的所有者不是将要转移过去的账户
+			ensure!(owner != new_owner, Error::<T>::NotOwner);
+
+			// 将kitty更新到新的所有者
 			Owner::<T>::insert(kitty_id, Some(new_owner.clone()));
+			// 发送事件
 			Self::deposit_event(Event::KittyTransfer(who, new_owner, kitty_id));
 			Ok(().into())
 		}
@@ -185,6 +195,13 @@ pub mod pallet {
 
 			let kitty1 = Self::kitties(kitty_id_1).ok_or(Error::<T>::InvalidKittyIndex);
 			let kitty2 = Self::kitties(kitty_id_2).ok_or(Error::<T>::InvalidKittyIndex);
+
+			let owner1 = Self::owner_of(kitty_id_1).ok_or(<Error<T>>::NotOwner)?;
+			let owner2 = Self::owner_of(kitty_id_2).ok_or(<Error<T>>::NotOwner)?;
+
+			// 确保两只kitty的所有者都是发送者
+			ensure!(who == owner1, Error::<T>::NotOwner);
+			ensure!(who == owner2, Error::<T>::NotOwner);
 
 			/* let kitty_id = match Self::kitties_count() {
 				Some(id) => {

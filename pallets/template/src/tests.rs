@@ -33,3 +33,23 @@ fn create_kitty_should_work() {
 		assert_eq!(SubstrateKitties::kitties_count(), Some(3));
 	});
 }
+
+#[test]
+fn transfer_kitty_should_work() {
+	new_test_ext().execute_with(|| {
+
+		setup_blocks(80);
+		assert_ok!(Balances::set_balance(Origin::root(), 1, 10000000, 0));
+		assert_eq!(Balances::free_balance(&1), 10000000);
+		// create a kitty with account #10.
+		let from = Origin::signed(10);
+		let to = Origin::signed(11);
+		let kitty00 = SubstrateKitties::create(from.clone());
+		assert_ok!(kitty00);
+		let kitty_id = SubstrateKitties::kitties_count().unwrap();
+		assert_ok!(SubstrateKitties::transfer(from, 3, kitty_id));
+
+		assert_eq!(SubstrateKitties::owner_of(kitty_id), Some(3));
+		// check that there is now 3 kitty in storage
+	});
+}
