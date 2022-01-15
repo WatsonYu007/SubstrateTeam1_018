@@ -302,12 +302,15 @@ impl pallet_sudo::Config for Runtime {
 	type Call = Call;
 }
 
+parameter_types! {
+	pub const MaxKittyOwned: u32 = 9999;
+}
 /// Configure the pallet-template in pallets/template.
 impl pallet_template::Config for Runtime {
 	type Event = Event;
-	type Randomness = RandomnessCollectiveFlip;
+	type KittyRandomness = RandomnessCollectiveFlip;
 	type Currency = Balances;
-	type KittyIndex = u32;
+	type MaxKittyOwned = MaxKittyOwned;
 	// type MinLength = MinPoeLength;
 	// type MaxLength = MaxPoeLength;
 }

@@ -48,6 +48,10 @@ version = '4.0.0-dev'
 
 [dependencies]
 sp-std = { default-features = false, version = '3.0.0' }
+serde = { default-features = false, version = '1.0.126' }
+log = { default-features = false, version = '0.4.14' }
+scale-info = { default-features = false, features = ['derive'], version = '1.0' }
+
 
 [dependencies.sp-io]
 default-features = false
