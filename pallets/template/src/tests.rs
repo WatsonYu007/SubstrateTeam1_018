@@ -1,55 +1,89 @@
-use crate::mock::*;
-use frame_support::assert_ok;
-use sp_runtime::{
-	traits::{ Header as _ },
+#![cfg(test)]
+
+use crate::{
+	mock::*, pallet::{Error}
 };
+use frame_support::{assert_ok, assert_noop};
 
-use frame_support::traits::{ OnInitialize};
-fn setup_blocks(blocks: u64) {
-	let mut parent_hash = System::parent_hash();
-	for i in 1..(blocks + 1) {
-		System::initialize(&i, &parent_hash, &Default::default(), frame_system::InitKind::Full);
-		RandomnessCollectiveFlip::on_initialize(i);
+#[test]
+fn should_build_genesis_kitties() {
+	new_test_ext().execute_with(|| {
+		// Check we have 2 kitties, as specified
+		assert_eq!(SubstrateKitties::kitty_cnt(), 2);
 
-		let header = System::finalize();
-		parent_hash = header.hash();
-		System::set_block_number(*header.number());
-	}
+		// Check owners own the correct amount of kitties
+		let kitties_owned_by_1 = SubstrateKitties::kitties_owned(1);
+		assert_eq!(kitties_owned_by_1.len(), 1);
+
+		let kitties_owned_by_2 = SubstrateKitties::kitties_owned(2);
+		assert_eq!(kitties_owned_by_2.len(), 1);
+
+		// Check that kitties are owned correctly
+		let kid1 = kitties_owned_by_1[0];
+		let kitty1 = SubstrateKitties::kitties(kid1)
+			.expect("Could have this kitty ID owned by acct 1");
+		assert_eq!(kitty1.owner, 1);
+
+		let kid2 = kitties_owned_by_2[0];
+		let kitty2 = SubstrateKitties::kitties(kid2)
+			.expect("Could have this kitty ID owned by acct 2");
+		assert_eq!(kitty2.owner, 2);
+	});
 }
 
 #[test]
 fn create_kitty_should_work() {
 	new_test_ext().execute_with(|| {
-
-		setup_blocks(80);
-		assert_ok!(Balances::set_balance(Origin::root(), 1, 10000000, 0));
-		assert_eq!(Balances::free_balance(&1), 10000000);
 		// create a kitty with account #10.
-		let kitty00 = SubstrateKitties::create(Origin::signed(10));
-		assert_ok!(kitty00);
-		assert_ok!(SubstrateKitties::create(Origin::signed(10)));
-		assert_ok!(SubstrateKitties::create(Origin::signed(10)));
-		// check that there is now 3 kitty in storage
-		assert_eq!(SubstrateKitties::kitties_count(), Some(3));
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(10)));
+
+		// check that 3 kitties exists (together with the two from genesis)
+		assert_eq!(SubstrateKitties::kitty_cnt(), 3);
+
+		// check that account #10 owns 1 kitty
+		assert_eq!(SubstrateKitties::kitties_owned(10).len(), 1);
+
+		// check that some random account #5 does not own a kitty
+		assert_eq!(SubstrateKitties::kitties_owned(5).len(), 0);
+
+		// check that this kitty is specifically owned by account #10
+		let hash = SubstrateKitties::kitties_owned(10)[0];
+		let kitty = SubstrateKitties::kitties(hash).expect("should found the kitty");
+		assert_eq!(kitty.owner, 10);
+		assert_eq!(kitty.price, None);
 	});
 }
 
 #[test]
 fn transfer_kitty_should_work() {
 	new_test_ext().execute_with(|| {
+		// check that acct 10 own a kitty
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(10)));
+		assert_eq!(SubstrateKitties::kitties_owned(10).len(), 1);
+		let hash = SubstrateKitties::kitties_owned(10)[0];
 
-		setup_blocks(80);
-		assert_ok!(Balances::set_balance(Origin::root(), 1, 10000000, 0));
-		assert_eq!(Balances::free_balance(&1), 10000000);
-		// create a kitty with account #10.
-		let from = Origin::signed(10);
-		let to = Origin::signed(11);
-		let kitty00 = SubstrateKitties::create(from.clone());
-		assert_ok!(kitty00);
-		let kitty_id = SubstrateKitties::kitties_count().unwrap();
-		assert_ok!(SubstrateKitties::transfer(from, 3, kitty_id));
+		// acct 10 send kitty to acct 3
+		assert_ok!(SubstrateKitties::transfer(Origin::signed(10), 3, hash));
 
-		assert_eq!(SubstrateKitties::owner_of(kitty_id), Some(3));
-		// check that there is now 3 kitty in storage
+		// acct 10 now has nothing
+		assert_eq!(SubstrateKitties::kitties_owned(10).len(), 0);
+		// but acct 3 does
+		assert_eq!(SubstrateKitties::kitties_owned(3).len(), 1);
+		let new_hash = SubstrateKitties::kitties_owned(3)[0];
+		// and it has the same hash
+		assert_eq!(hash, new_hash);
+	});
+}
+
+#[test]
+fn transfer_non_owned_kitty_should_fail() {
+	new_test_ext().execute_with(|| {
+		let hash = SubstrateKitties::kitties_owned(1)[0];
+
+		// account 0 cannot transfer a kitty with this hash.
+		assert_noop!(
+			SubstrateKitties::transfer(Origin::signed(9), 2, hash),
+			Error::<Test>::NotKittyOwner
+		);
 	});
 }
