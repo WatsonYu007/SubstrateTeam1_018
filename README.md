@@ -4,9 +4,8 @@
 
 
 
-第一次作业提交，请执政
+第四次作业提交，请指教
 
 
-
-![Screenshot from 2021-12-26 23-24-41](/home/pick/Documents/study/SubstrateTeam1_018/README.assets/Screenshot from 2021-12-26 23-24-41.png)
+![Screenshot_from_2022-01-23_20-37-22.png](https://github.com/WatsonYu007/SubstrateTeam1_018/blob/kitties/README.assets/Screenshot%20from%202022-01-23%2020-37-22.png)
 
