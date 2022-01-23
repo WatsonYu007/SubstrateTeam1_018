@@ -25,8 +25,6 @@ frame_support::construct_runtime!(
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
 	pub const SS58Prefix: u8 = 42;
-	pub const MinPoeLength: u32 = 8;
-	pub const MaxPoeLength: u32 = 32;
 }
 
 impl system::Config for Test {
@@ -57,8 +55,6 @@ impl system::Config for Test {
 
 impl pallet_template::Config for Test {
 	type Event = Event;
-	type MinLength = MinPoeLength;
-	type MaxLength = MaxPoeLength;
 }
 
 // Build genesis storage according to the mock runtime.
